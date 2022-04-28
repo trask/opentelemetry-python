@@ -36,7 +36,7 @@ jobs:
               exit 1
             fi
             if [[ $prerelease_patch != 0 ]]; then
-              prior_combined_version_when_patch="$stable_major.$stable_minor.$((stable_patch - 1))/${prerelease_minor}b$((prerelease_patch - 1))"
+              prior_combined_version_when_patch="$stable_major.$stable_minor.$((stable_patch - 1))/0.${prerelease_minor}b$((prerelease_patch - 1))"
             fi
           fi
 

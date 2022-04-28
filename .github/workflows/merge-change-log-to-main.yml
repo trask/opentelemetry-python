@@ -32,6 +32,5 @@ jobs:
           git push origin HEAD:$branch
           gh pr create --title "$message" \
                        --body "$body" \
-                       --label "Skip Changelog" \
                        --head $branch \
                        --base main

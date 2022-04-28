@@ -59,7 +59,7 @@ jobs:
 
           # the last complex regex is needed because markdown docs render newlines as soft wraps
           # while release notes render them as line breaks
-          sed -n "0,/^## Versions $STABLE_VERSION and $PRERELEASE_VERSION/d;/^## Versions /q;p" CHANGELOG.md \
+          sed -n "0,/^## Version $STABLE_VERSION/$PRERELEASE_VERSION/d;/^## Version /q;p" CHANGELOG.md \
             | sed -E "s,\[#([0-9]+)]\(https://github.com/$GITHUB_REPOSITORY/(pull|issues)/[0-9]+\),#\1," \
             | perl -0pe 's/(?<!\n)\n *(?!\n)(?![-*] )(?![1-9]+\. )/ /g' \
             >> release-notes.txt
@@ -69,7 +69,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           gh release create --target $GITHUB_REF_NAME \
-                            --title "Versions $STABLE_VERSION and $PRERELEASE_VERSION" \
+                            --title "Version $STABLE_VERSION/$PRERELEASE_VERSION" \
                             --notes-file release-notes.txt \
                             --discussion-category announcements \
                             v$STABLE_VERSION
@@ -79,7 +79,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           date=$(gh release view v$STABLE_VERSION --json publishedAt --jq .publishedAt | sed 's/T.*//')
-          sed -Ei "s/## Version $STABLE_VERSION/$PRERELEASE_VERSION .*/## Version $STABLE_VERSION/$PRERELEASE_VERSION ($date)/" CHANGELOG.md
+          sed -Ei "s,## Version $STABLE_VERSION/$PRERELEASE_VERSION .*,## Version $STABLE_VERSION/$PRERELEASE_VERSION ($date)," CHANGELOG.md
 
       - name: Set git user
         run: .github/scripts/set-git-user.sh

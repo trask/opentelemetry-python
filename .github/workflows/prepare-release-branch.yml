@@ -35,7 +35,7 @@ jobs:
 
       - name: Create pull request against the release branch
         env:
-          GITHUB_TOKEN: ${{ secrets.BOT_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           message="Prepare release $STABLE_VERSION/$PRERELEASE_VERSION"
           branch="prepare-release-$STABLE_VERSION-$PRERELEASE_VERSION"
@@ -84,7 +84,7 @@ jobs:
 
       - name: Create pull request against main
         env:
-          GITHUB_TOKEN: ${{ secrets.BOT_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           message="Update version to $NEXT_STABLE_VERSION/$NEXT_PRERELEASE_VERSION"
           body="Update version to \`$NEXT_STABLE_VERSION/$NEXT_PRERELEASE_VERSION\`."

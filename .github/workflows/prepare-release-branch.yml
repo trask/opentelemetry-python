@@ -90,7 +90,7 @@ jobs:
 
       - name: Create pull request against main
         env:
-          GITHUB_TOKEN: ${{ secrets.BOT_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           message="Update version to $NEXT_STABLE_VERSION/$NEXT_PRERELEASE_VERSION"
           body="Update version to \`$NEXT_STABLE_VERSION/$NEXT_PRERELEASE_VERSION\`."

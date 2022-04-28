@@ -5,9 +5,9 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/open-telemetry/opentelemetry-python/compare/v1.11.1-0.30b1...HEAD)
+## Version 1.12.0/0.31b0 (Unreleased)
 
-## Versions 1.11.1 and 0.30b1 (2022-04-21)
+## Version 1.11.1/0.30b1 (2022-04-21)
 
 - Add parameter to MetricReader constructor to select aggregation per instrument kind
   ([#2638](https://github.com/open-telemetry/opentelemetry-python/pull/2638))
@@ -23,7 +23,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Deprecate InstrumentationLibraryInfo and Add InstrumentationScope
   ([#2583](https://github.com/open-telemetry/opentelemetry-python/pull/2583))
 
-## Versions 1.11.0 and 0.30b0 (2022-04-18)
+## Version 1.11.0/0.30b0 (2022-04-18)
 
 - Rename API Measurement for async instruments to Observation
   ([#2617](https://github.com/open-telemetry/opentelemetry-python/pull/2617))
@@ -57,7 +57,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Update opentelemetry-proto to v0.16.0
   ([#2619](https://github.com/open-telemetry/opentelemetry-python/pull/2619))
 
-## Versions 1.10.0 and 0.29b0 (2022-03-10)
+## Version 1.10.0/0.29b0 (2022-03-10)
 
 - Docs rework: [non-API docs are
   moving](https://github.com/open-telemetry/opentelemetry-python/issues/2172) to
@@ -78,12 +78,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - [exporter/opentelemetry-exporter-prometheus] restore package using the new metrics API
   ([#2321](https://github.com/open-telemetry/opentelemetry-python/pull/2321))
 
-## Versions 1.9.1 and 0.28b1 (2022-01-29)
+## Version 1.9.1/0.28b1 (2022-01-29)
 
 - Update opentelemetry-proto to v0.12.0. Note that this update removes deprecated status codes.
   ([#2415](https://github.com/open-telemetry/opentelemetry-python/pull/2415))
 
-## Versions 1.9.0 and 0.28b0 (2022-01-26)
+## Version 1.9.0/0.28b0 (2022-01-26)
 
 - Fix SpanLimits global span limit defaulting when set to 0
   ([#2398](https://github.com/open-telemetry/opentelemetry-python/pull/2398))
@@ -106,7 +106,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - [logs] prevent None from causing problems
   ([#2410](https://github.com/open-telemetry/opentelemetry-python/pull/2410))
 
-## Versions 1.8.0 and 0.27b0 (2021-12-17)
+## Version 1.8.0/0.27b0 (2021-12-17)
 
 - Adds Aggregation and instruments as part of Metrics SDK
   ([#2234](https://github.com/open-telemetry/opentelemetry-python/pull/2234))
@@ -125,7 +125,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Support insecure configuration for OTLP gRPC exporter
   ([#2350](https://github.com/open-telemetry/opentelemetry-python/pull/2350))
 
-## Versions 1.7.1 and 0.26b1 (2021-11-11)
+## Version 1.7.1/0.26b1 (2021-11-11)
 
 - Add support for Python 3.10
   ([#2207](https://github.com/open-telemetry/opentelemetry-python/pull/2207))
@@ -146,12 +146,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `opentelemetry-test` start releasing to pypi.org
   ([#2269](https://github.com/open-telemetry/opentelemetry-python/pull/2269))
 
-## Versions 1.6.2 and 0.25b2 (2021-10-19)
+## Version 1.6.2/0.25b2 (2021-10-19)
 
 - Fix parental trace relationship for opentracing `follows_from` reference
   ([#2180](https://github.com/open-telemetry/opentelemetry-python/pull/2180))
 
-## Versions 1.6.1 and 0.25b1 (2021-10-18)
+## Version 1.6.1/0.25b1 (2021-10-18)
 
 - Fix ReadableSpan property types attempting to create a mapping from a list
   ([#2215](https://github.com/open-telemetry/opentelemetry-python/pull/2215))
@@ -160,7 +160,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Propagation: only warn about oversized baggage headers when headers exist
   ([#2212](https://github.com/open-telemetry/opentelemetry-python/pull/2212))
 
-## Versions 1.6.0 and 0.25b0 (2021-10-13)
+## Version 1.6.0/0.25b0 (2021-10-13)
 
 - Fix race in `set_tracer_provider()`
   ([#2182](https://github.com/open-telemetry/opentelemetry-python/pull/2182))
@@ -198,7 +198,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Add name to `BatchSpanProcessor` worker thread
   ([#2186](https://github.com/open-telemetry/opentelemetry-python/pull/2186))
 
-## Versions 1.5.0 and 0.24b0 (2021-08-26)
+## Version 1.5.0/0.24b0 (2021-08-26)
 
 - Add pre and post instrumentation entry points
   ([#1983](https://github.com/open-telemetry/opentelemetry-python/pull/1983))
@@ -231,7 +231,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fix opentelemetry-bootstrap dependency script.
   ([#1987](https://github.com/open-telemetry/opentelemetry-python/pull/1987))
 
-## Versions 1.4.0 and 0.23b0 (2021-07-21)
+## Version 1.4.0/0.23b0 (2021-07-21)
 
 ### Added
 
@@ -282,7 +282,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   opentelemetry specification format, rather than opentracing spec format.
   ([#1878](https://github.com/open-telemetry/opentelemetry-python/pull/1878))
 
-## Versions 1.3.0 and 0.22b0 (2021-06-01)
+## Version 1.3.0/0.22b0 (2021-06-01)
 
 ### Added
 
@@ -304,7 +304,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Update protos to latest version release 0.9.0
   ([#1873](https://github.com/open-telemetry/opentelemetry-python/pull/1873))
 
-## Versions 1.2.0 and 0.21b0 (2021-05-11)
+## Version 1.2.0/0.21b0 (2021-05-11)
 
 ### Added
 

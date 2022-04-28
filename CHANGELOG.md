@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Version 1.12.0/0.31b0 (Unreleased)
 
+- Dummy entry
+
 ## Version 1.11.1/0.30b1 (2022-04-21)
 
 - Add parameter to MetricReader constructor to select aggregation per instrument kind

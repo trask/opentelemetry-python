@@ -29,8 +29,8 @@ jobs:
           fi
           if [[ $stable_patch != 0 ]]; then
             if [[ $prerelease_version =~ 0\.([0-9]+)b([0-9]+) ]]; then
-              prerelease_minor="${BASH_REMATCH[2]}"
-              prerelease_patch="${BASH_REMATCH[3]}"
+              prerelease_minor="${BASH_REMATCH[1]}"
+              prerelease_patch="${BASH_REMATCH[2]}"
             else
               echo "unexpected prerelease_version: $prerelease_version"
               exit 1

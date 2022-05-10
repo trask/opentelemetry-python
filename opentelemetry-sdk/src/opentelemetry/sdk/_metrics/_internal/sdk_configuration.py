@@ -14,21 +14,16 @@
 
 # pylint: disable=unused-import
 
-from opentelemetry.sdk._metrics._internal import (  # noqa: F401
-    Meter,
-    MeterProvider,
-)
-from opentelemetry.sdk._metrics._internal.instrument import (  # noqa: F401
-    Counter,
-    Histogram,
-    ObservableCounter,
-    ObservableGauge,
-    ObservableUpDownCounter,
-    UpDownCounter,
-)
+from dataclasses import dataclass
+from typing import Sequence
 
-__all__ = []
-for key, value in globals().copy().items():
-    if not key.startswith("_"):
-        value.__module__ = __name__
-        __all__.append(key)
+# This kind of import is needed to avoid Sphinx errors.
+import opentelemetry.sdk._metrics
+import opentelemetry.sdk.resources
+
+
+@dataclass
+class SdkConfiguration:
+    resource: "opentelemetry.sdk.resources.Resource"
+    metric_readers: Sequence["opentelemetry.sdk._metrics.MetricReader"]
+    views: Sequence["opentelemetry.sdk._metrics.View"]

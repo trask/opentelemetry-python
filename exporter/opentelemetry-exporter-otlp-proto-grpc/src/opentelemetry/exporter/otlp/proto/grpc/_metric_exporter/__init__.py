@@ -30,7 +30,7 @@ from opentelemetry.proto.metrics.v1 import metrics_pb2 as pb2
 from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_OTLP_METRICS_INSECURE,
 )
-from opentelemetry.sdk._metrics.point import (
+from opentelemetry.sdk._metrics.export import (
     Gauge,
     Histogram,
     Metric,
@@ -168,8 +168,14 @@ class OTLPMetricExporter(
             )
         )
 
-    def export(self, metrics: Sequence[Metric]) -> MetricExportResult:
+    def export(
+        self,
+        metrics: Sequence[Metric],
+        timeout_millis: float = 10_000,
+        **kwargs,
+    ) -> MetricExportResult:
+        # TODO(#2663): OTLPExporterMixin should pass timeout to gRPC
         return self._export(metrics)
 
-    def shutdown(self):
+    def shutdown(self, timeout_millis: float = 30_000, **kwargs) -> None:
         pass

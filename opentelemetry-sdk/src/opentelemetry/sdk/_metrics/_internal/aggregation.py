@@ -12,20 +12,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""
-.. Explicitly document private _AggregationFactory
-.. autoclass:: _AggregationFactory
-"""
-
 from abc import ABC, abstractmethod
 from bisect import bisect_left
 from dataclasses import replace
+from enum import IntEnum
 from logging import getLogger
 from math import inf
 from threading import Lock
 from typing import Generic, List, Optional, Sequence, TypeVar
 
-from opentelemetry._metrics.instrument import (
+from opentelemetry._metrics import (
     Asynchronous,
     Counter,
     Histogram,
@@ -35,17 +31,30 @@ from opentelemetry._metrics.instrument import (
     ObservableUpDownCounter,
     Synchronous,
     UpDownCounter,
-    _Monotonic,
 )
-from opentelemetry.sdk._metrics.measurement import Measurement
-from opentelemetry.sdk._metrics.point import AggregationTemporality, Gauge
-from opentelemetry.sdk._metrics.point import Histogram as HistogramPoint
-from opentelemetry.sdk._metrics.point import PointT, Sum
+from opentelemetry.sdk._metrics._internal.measurement import Measurement
+from opentelemetry.sdk._metrics._internal.point import Gauge
+from opentelemetry.sdk._metrics._internal.point import (
+    Histogram as HistogramPoint,
+)
+from opentelemetry.sdk._metrics._internal.point import PointT, Sum
 from opentelemetry.util._time import _time_ns
 
 _PointVarT = TypeVar("_PointVarT", bound=PointT)
 
 _logger = getLogger(__name__)
+
+
+class AggregationTemporality(IntEnum):
+    """
+    The temporality to use when aggregating data.
+
+    Can be one of the following values:
+    """
+
+    UNSPECIFIED = 0
+    DELTA = 1
+    CUMULATIVE = 2
 
 
 class _Aggregation(ABC, Generic[_PointVarT]):
@@ -69,29 +78,33 @@ class _DropAggregation(_Aggregation):
         pass
 
 
-class _AggregationFactory(ABC):
+class Aggregation(ABC):
+    """
+    Base class for all aggregation types.
+    """
+
     @abstractmethod
     def _create_aggregation(self, instrument: Instrument) -> _Aggregation:
         """Creates an aggregation"""
 
 
-class DefaultAggregation(_AggregationFactory):
+class DefaultAggregation(Aggregation):
     """
     The default aggregation to be used in a `View`.
 
     This aggregation will create an actual aggregation depending on the
     instrument type, as specified next:
 
-    ============================================= ====================================
-    Instrument                                    Aggregation
-    ============================================= ====================================
-    `Counter`                                     `SumAggregation`
-    `UpDownCounter`                               `SumAggregation`
-    `ObservableCounter`                           `SumAggregation`
-    `ObservableUpDownCounter`                     `SumAggregation`
-    `opentelemetry._metrics.instrument.Histogram` `ExplicitBucketHistogramAggregation`
-    `ObservableGauge`                             `LastValueAggregation`
-    ============================================= ====================================
+    ==================================================== ====================================
+    Instrument                                           Aggregation
+    ==================================================== ====================================
+    `opentelemetry.sdk._metrics.Counter`                 `SumAggregation`
+    `opentelemetry.sdk._metrics.UpDownCounter`           `SumAggregation`
+    `opentelemetry.sdk._metrics.ObservableCounter`       `SumAggregation`
+    `opentelemetry.sdk._metrics.ObservableUpDownCounter` `SumAggregation`
+    `opentelemetry.sdk._metrics.Histogram`               `ExplicitBucketHistogramAggregation`
+    `opentelemetry.sdk._metrics.ObservableGauge`         `LastValueAggregation`
+    ==================================================== ====================================
     """
 
     def _create_aggregation(self, instrument: Instrument) -> _Aggregation:
@@ -418,7 +431,7 @@ def _convert_aggregation_temporality(
     return None
 
 
-class ExplicitBucketHistogramAggregation(_AggregationFactory):
+class ExplicitBucketHistogramAggregation(Aggregation):
     """This aggregation informs the SDK to collect:
 
     - Count of Measurement values falling within explicit bucket boundaries.
@@ -458,7 +471,7 @@ class ExplicitBucketHistogramAggregation(_AggregationFactory):
         )
 
 
-class SumAggregation(_AggregationFactory):
+class SumAggregation(Aggregation):
     """This aggregation informs the SDK to collect:
 
     - The arithmetic sum of Measurement values.
@@ -473,12 +486,12 @@ class SumAggregation(_AggregationFactory):
             temporality = AggregationTemporality.CUMULATIVE
 
         return _SumAggregation(
-            isinstance(instrument, _Monotonic),
+            isinstance(instrument, (Counter, ObservableCounter)),
             temporality,
         )
 
 
-class LastValueAggregation(_AggregationFactory):
+class LastValueAggregation(Aggregation):
     """
     This aggregation informs the SDK to collect:
 
@@ -490,7 +503,7 @@ class LastValueAggregation(_AggregationFactory):
         return _LastValueAggregation()
 
 
-class DropAggregation(_AggregationFactory):
+class DropAggregation(Aggregation):
     """Using this aggregation will make all measurements be ignored."""
 
     def _create_aggregation(self, instrument: Instrument) -> _Aggregation:

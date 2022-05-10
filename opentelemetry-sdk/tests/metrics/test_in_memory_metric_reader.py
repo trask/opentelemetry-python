@@ -15,11 +15,11 @@
 from unittest import TestCase
 from unittest.mock import Mock
 
-from opentelemetry._metrics.observation import Observation
+from opentelemetry._metrics import Observation
 from opentelemetry.sdk._metrics import MeterProvider
-from opentelemetry.sdk._metrics.export import InMemoryMetricReader
-from opentelemetry.sdk._metrics.point import (
+from opentelemetry.sdk._metrics.export import (
     AggregationTemporality,
+    InMemoryMetricReader,
     Metric,
     Sum,
 )
@@ -70,7 +70,8 @@ class TestInMemoryMetricReader(TestCase):
         meter = MeterProvider(metric_readers=[reader]).get_meter("test_meter")
         counter1 = meter.create_counter("counter1")
         meter.create_observable_gauge(
-            "observable_gauge1", callbacks=[lambda: [Observation(value=12)]]
+            "observable_gauge1",
+            callbacks=[lambda options: [Observation(value=12)]],
         )
         counter1.add(1, {"foo": "1"})
         counter1.add(1, {"foo": "2"})

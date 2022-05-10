@@ -16,7 +16,10 @@
 
 
 from abc import ABC, abstractmethod
+from dataclasses import dataclass
 from logging import getLogger
+from re import ASCII
+from re import compile as re_compile
 from typing import (
     Callable,
     Generator,
@@ -24,23 +27,39 @@ from typing import (
     Iterable,
     Optional,
     Sequence,
+    Tuple,
     TypeVar,
     Union,
 )
 
 # pylint: disable=unused-import; needed for typing and sphinx
 from opentelemetry import _metrics as metrics
-from opentelemetry._metrics.observation import Observation
+from opentelemetry._metrics._internal.observation import Observation
 from opentelemetry.util.types import Attributes
+
+_logger = getLogger(__name__)
+
+_name_regex = re_compile(r"[a-zA-Z][-.\w]{0,62}", ASCII)
+_unit_regex = re_compile(r"\w{0,63}", ASCII)
+
+
+@dataclass(frozen=True)
+class CallbackOptions:
+    """Options for the callback
+
+    Args:
+        timeout_millis: Timeout for the callback's execution. If the callback does asynchronous
+            work (e.g. HTTP requests), it should respect this timeout.
+    """
+
+    timeout_millis: float = 10_000
+
 
 InstrumentT = TypeVar("InstrumentT", bound="Instrument")
 CallbackT = Union[
-    Callable[[], Iterable[Observation]],
-    Generator[Iterable[Observation], None, None],
+    Callable[[CallbackOptions], Iterable[Observation]],
+    Generator[Iterable[Observation], CallbackOptions, None],
 ]
-
-
-_logger = getLogger(__name__)
 
 
 class Instrument(ABC):
@@ -55,9 +74,21 @@ class Instrument(ABC):
     ) -> None:
         pass
 
-        # FIXME check that the instrument name is valid
-        # FIXME check that the unit is 63 characters or shorter
-        # FIXME check that the unit contains only ASCII characters
+    @staticmethod
+    def _check_name_and_unit(name: str, unit: str) -> Tuple[bool, bool]:
+        """
+        Checks the following instrument name and unit for compliance with the
+        spec.
+
+        Returns a tuple of boolean value, the first one will be `True` if the
+        name is valid, `False` otherwise. The second value will be `True` if
+        the unit is valid, `False` otherwise.
+        """
+
+        return (
+            _name_regex.fullmatch(name) is not None,
+            _unit_regex.fullmatch(unit) is not None,
+        )
 
 
 class _ProxyInstrument(ABC, Generic[InstrumentT]):
@@ -115,23 +146,7 @@ class Asynchronous(Instrument):
         super().__init__(name, unit=unit, description=description)
 
 
-class _Adding(Instrument):
-    pass
-
-
-class _Grouping(Instrument):
-    pass
-
-
-class _Monotonic(_Adding):
-    pass
-
-
-class _NonMonotonic(_Adding):
-    pass
-
-
-class Counter(_Monotonic, Synchronous):
+class Counter(Synchronous):
     """A Counter is a synchronous `Instrument` which supports non-negative increments."""
 
     @abstractmethod
@@ -140,7 +155,6 @@ class Counter(_Monotonic, Synchronous):
         amount: Union[int, float],
         attributes: Optional[Attributes] = None,
     ) -> None:
-        # FIXME check that the amount is non negative
         pass
 
 
@@ -176,7 +190,7 @@ class _ProxyCounter(_ProxyInstrument[Counter], Counter):
         return meter.create_counter(self._name, self._unit, self._description)
 
 
-class UpDownCounter(_NonMonotonic, Synchronous):
+class UpDownCounter(Synchronous):
     """An UpDownCounter is a synchronous `Instrument` which supports increments and decrements."""
 
     @abstractmethod
@@ -222,7 +236,7 @@ class _ProxyUpDownCounter(_ProxyInstrument[UpDownCounter], UpDownCounter):
         )
 
 
-class ObservableCounter(_Monotonic, Asynchronous):
+class ObservableCounter(Asynchronous):
     """An ObservableCounter is an asynchronous `Instrument` which reports monotonically
     increasing value(s) when the instrument is being observed.
     """
@@ -252,7 +266,7 @@ class _ProxyObservableCounter(
         )
 
 
-class ObservableUpDownCounter(_NonMonotonic, Asynchronous):
+class ObservableUpDownCounter(Asynchronous):
     """An ObservableUpDownCounter is an asynchronous `Instrument` which reports additive value(s) (e.g.
     the process heap size - it makes sense to report the heap size from multiple processes and sum them
     up, so we get the total heap usage) when the instrument is being observed.
@@ -284,7 +298,7 @@ class _ProxyObservableUpDownCounter(
         )
 
 
-class Histogram(_Grouping, Synchronous):
+class Histogram(Synchronous):
     """Histogram is a synchronous `Instrument` which can be used to report arbitrary values
     that are likely to be statistically meaningful. It is intended for statistics such as
     histograms, summaries, and percentile.
@@ -333,7 +347,7 @@ class _ProxyHistogram(_ProxyInstrument[Histogram], Histogram):
         )
 
 
-class ObservableGauge(_Grouping, Asynchronous):
+class ObservableGauge(Asynchronous):
     """Asynchronous Gauge is an asynchronous `Instrument` which reports non-additive value(s) (e.g.
     the room temperature - it makes no sense to report the temperature value from multiple rooms
     and sum them up) when the instrument is being observed.

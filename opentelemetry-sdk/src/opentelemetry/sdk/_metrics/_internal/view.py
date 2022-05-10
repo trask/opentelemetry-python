@@ -20,10 +20,10 @@ from typing import Optional, Set, Type
 # FIXME import from typing when support for 3.6 is removed
 from typing_extensions import final
 
-from opentelemetry._metrics.instrument import Instrument
-from opentelemetry.sdk._metrics.aggregation import (
+from opentelemetry._metrics import Instrument
+from opentelemetry.sdk._metrics._internal.aggregation import (
+    Aggregation,
     DefaultAggregation,
-    _AggregationFactory,
 )
 
 _logger = getLogger(__name__)
@@ -91,7 +91,7 @@ class View:
         name: Optional[str] = None,
         description: Optional[str] = None,
         attribute_keys: Optional[Set[str]] = None,
-        aggregation: Optional[_AggregationFactory] = None,
+        aggregation: Optional[Aggregation] = None,
     ):
         if (
             instrument_type

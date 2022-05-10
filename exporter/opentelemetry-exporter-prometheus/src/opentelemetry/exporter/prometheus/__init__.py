@@ -77,8 +77,13 @@ from prometheus_client.core import (
 )
 from prometheus_client.core import Metric as PrometheusMetric
 
-from opentelemetry.sdk._metrics.export import MetricReader
-from opentelemetry.sdk._metrics.point import Gauge, Histogram, Metric, Sum
+from opentelemetry.sdk._metrics.export import (
+    Gauge,
+    Histogram,
+    Metric,
+    MetricReader,
+    Sum,
+)
 
 _logger = getLogger(__name__)
 
@@ -110,14 +115,18 @@ class PrometheusMetricReader(MetricReader):
         REGISTRY.register(self._collector)
         self._collector._callback = self.collect
 
-    def _receive_metrics(self, metrics: Iterable[Metric]) -> None:
+    def _receive_metrics(
+        self,
+        metrics: Iterable[Metric],
+        timeout_millis: float = 10_000,
+        **kwargs,
+    ) -> None:
         if metrics is None:
             return
         self._collector.add_metrics_data(metrics)
 
-    def shutdown(self) -> bool:
+    def shutdown(self, timeout_millis: float = 30_000, **kwargs) -> None:
         REGISTRY.unregister(self._collector)
-        return True
 
 
 class _CustomCollector:

@@ -12,34 +12,32 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# pylint: disable=too-many-ancestors
+# pylint: disable=too-many-ancestors, unused-import
 
 from logging import getLogger
-from typing import TYPE_CHECKING, Dict, Generator, Iterable, Optional, Union
+from typing import Dict, Generator, Iterable, List, Optional, Union
 
-from opentelemetry._metrics.instrument import CallbackT
-from opentelemetry._metrics.instrument import Counter as APICounter
-from opentelemetry._metrics.instrument import Histogram as APIHistogram
-from opentelemetry._metrics.instrument import (
-    ObservableCounter as APIObservableCounter,
-)
-from opentelemetry._metrics.instrument import (
-    ObservableGauge as APIObservableGauge,
-)
-from opentelemetry._metrics.instrument import (
+# This kind of import is needed to avoid Sphinx errors.
+import opentelemetry.sdk._metrics
+from opentelemetry._metrics import CallbackT
+from opentelemetry._metrics import Counter as APICounter
+from opentelemetry._metrics import Histogram as APIHistogram
+from opentelemetry._metrics import ObservableCounter as APIObservableCounter
+from opentelemetry._metrics import ObservableGauge as APIObservableGauge
+from opentelemetry._metrics import (
     ObservableUpDownCounter as APIObservableUpDownCounter,
 )
-from opentelemetry._metrics.instrument import UpDownCounter as APIUpDownCounter
-from opentelemetry.sdk._metrics.measurement import Measurement
+from opentelemetry._metrics import UpDownCounter as APIUpDownCounter
+from opentelemetry._metrics._internal.instrument import CallbackOptions
+from opentelemetry.sdk._metrics._internal.measurement import Measurement
 from opentelemetry.sdk.util.instrumentation import InstrumentationScope
 
-if TYPE_CHECKING:
-    from opentelemetry.sdk._metrics.measurement_consumer import (
-        MeasurementConsumer,
-    )
-
-
 _logger = getLogger(__name__)
+
+
+_ERROR_MESSAGE = (
+    "Expected ASCII string of maximum length 63 characters but got {}"
+)
 
 
 class _Synchronous:
@@ -47,11 +45,19 @@ class _Synchronous:
         self,
         name: str,
         instrumentation_scope: InstrumentationScope,
-        measurement_consumer: "MeasurementConsumer",
+        measurement_consumer: "opentelemetry.sdk._metrics.MeasurementConsumer",
         unit: str = "",
         description: str = "",
     ):
-        self.name = name
+        # pylint: disable=no-member
+        is_name_valid, is_unit_valid = self._check_name_and_unit(name, unit)
+
+        if not is_name_valid:
+            raise Exception(_ERROR_MESSAGE.format(name))
+
+        if not is_unit_valid:
+            raise Exception(_ERROR_MESSAGE.format(unit))
+        self.name = name.lower()
         self.unit = unit
         self.description = description
         self.instrumentation_scope = instrumentation_scope
@@ -64,19 +70,27 @@ class _Asynchronous:
         self,
         name: str,
         instrumentation_scope: InstrumentationScope,
-        measurement_consumer: "MeasurementConsumer",
+        measurement_consumer: "opentelemetry.sdk._metrics.MeasurementConsumer",
         callbacks: Optional[Iterable[CallbackT]] = None,
         unit: str = "",
         description: str = "",
     ):
-        self.name = name
+        # pylint: disable=no-member
+        is_name_valid, is_unit_valid = self._check_name_and_unit(name, unit)
+
+        if not is_name_valid:
+            raise Exception(_ERROR_MESSAGE.format(name))
+
+        if not is_unit_valid:
+            raise Exception(_ERROR_MESSAGE.format(unit))
+        self.name = name.lower()
         self.unit = unit
         self.description = description
         self.instrumentation_scope = instrumentation_scope
         self._measurement_consumer = measurement_consumer
         super().__init__(name, callbacks, unit=unit, description=description)
 
-        self._callbacks = []
+        self._callbacks: List[CallbackT] = []
 
         if callbacks is not None:
 
@@ -84,24 +98,33 @@ class _Asynchronous:
 
                 if isinstance(callback, Generator):
 
-                    def inner(callback=callback) -> Iterable[Measurement]:
-                        return next(callback)
+                    # advance generator to it's first yield
+                    next(callback)
+
+                    def inner(
+                        options: CallbackOptions,
+                        callback=callback,
+                    ) -> Iterable[Measurement]:
+                        try:
+                            return callback.send(options)
+                        except StopIteration:
+                            return []
 
                     self._callbacks.append(inner)
                 else:
                     self._callbacks.append(callback)
 
-    def callback(self) -> Iterable[Measurement]:
+    def callback(
+        self, callback_options: CallbackOptions
+    ) -> Iterable[Measurement]:
         for callback in self._callbacks:
             try:
-                for api_measurement in callback():
+                for api_measurement in callback(callback_options):
                     yield Measurement(
                         api_measurement.value,
                         instrument=self,
                         attributes=api_measurement.attributes,
                     )
-            except StopIteration:
-                pass
             except Exception:  # pylint: disable=broad-except
                 _logger.exception(
                     "Callback failed for instrument %s.", self.name

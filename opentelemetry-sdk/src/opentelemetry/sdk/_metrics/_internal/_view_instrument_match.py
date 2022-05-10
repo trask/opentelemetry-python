@@ -15,22 +15,24 @@
 
 from logging import getLogger
 from threading import Lock
-from typing import TYPE_CHECKING, Dict, Iterable
+from typing import Dict, Iterable
 
-from opentelemetry.sdk._metrics.aggregation import (
+from opentelemetry._metrics import Instrument
+from opentelemetry.sdk._metrics._internal.aggregation import (
+    Aggregation,
     DefaultAggregation,
     _Aggregation,
-    _AggregationFactory,
     _convert_aggregation_temporality,
     _PointVarT,
+    _SumAggregation,
 )
-from opentelemetry.sdk._metrics.measurement import Measurement
-from opentelemetry.sdk._metrics.point import AggregationTemporality, Metric
-from opentelemetry.sdk._metrics.sdk_configuration import SdkConfiguration
-from opentelemetry.sdk._metrics.view import View
-
-if TYPE_CHECKING:
-    from opentelemetry.sdk._metrics.instrument import _Instrument
+from opentelemetry.sdk._metrics._internal.export import AggregationTemporality
+from opentelemetry.sdk._metrics._internal.measurement import Measurement
+from opentelemetry.sdk._metrics._internal.point import Metric
+from opentelemetry.sdk._metrics._internal.sdk_configuration import (
+    SdkConfiguration,
+)
+from opentelemetry.sdk._metrics._internal.view import View
 
 _logger = getLogger(__name__)
 
@@ -39,9 +41,9 @@ class _ViewInstrumentMatch:
     def __init__(
         self,
         view: View,
-        instrument: "_Instrument",
+        instrument: Instrument,
         sdk_config: SdkConfiguration,
-        instrument_class_aggregation: Dict[type, _AggregationFactory],
+        instrument_class_aggregation: Dict[type, Aggregation],
     ):
         self._view = view
         self._instrument = instrument
@@ -50,6 +52,39 @@ class _ViewInstrumentMatch:
         self._attributes_previous_point: Dict[frozenset, _PointVarT] = {}
         self._lock = Lock()
         self._instrument_class_aggregation = instrument_class_aggregation
+        self._name = self._view._name or self._instrument.name
+        self._description = (
+            self._view._description or self._instrument.description
+        )
+        if not isinstance(self._view._aggregation, DefaultAggregation):
+            self._aggregation = self._view._aggregation._create_aggregation(
+                self._instrument
+            )
+        else:
+            self._aggregation = self._instrument_class_aggregation[
+                self._instrument.__class__
+            ]._create_aggregation(self._instrument)
+
+    def conflicts(self, other: "_ViewInstrumentMatch") -> bool:
+        # pylint: disable=protected-access
+
+        result = (
+            self._name == other._name
+            and self._instrument.unit == other._instrument.unit
+            # The aggregation class is being used here instead of data point
+            # type since they are functionally equivalent.
+            and self._aggregation.__class__ == other._aggregation.__class__
+        )
+        if isinstance(self._aggregation, _SumAggregation):
+            result = (
+                result
+                and self._aggregation._instrument_is_monotonic
+                == other._aggregation._instrument_is_monotonic
+                and self._aggregation._instrument_temporality
+                == other._aggregation._instrument_temporality
+            )
+
+        return result
 
     # pylint: disable=protected-access
     def consume_measurement(self, measurement: Measurement) -> None:
@@ -116,14 +151,11 @@ class _ViewInstrumentMatch:
 
                     yield Metric(
                         attributes=dict(attributes),
-                        description=(
-                            self._view._description
-                            or self._instrument.description
-                        ),
+                        description=self._description,
                         instrumentation_scope=(
                             self._instrument.instrumentation_scope
                         ),
-                        name=self._view._name or self._instrument.name,
+                        name=self._name,
                         resource=self._sdk_config.resource,
                         unit=self._instrument.unit,
                         point=_convert_aggregation_temporality(

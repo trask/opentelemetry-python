@@ -16,13 +16,14 @@
 from inspect import Signature, isabstract, signature
 from unittest import TestCase
 
-from opentelemetry._metrics import Meter, NoOpMeter
-from opentelemetry._metrics.instrument import (
+from opentelemetry._metrics import (
     Counter,
     Histogram,
     Instrument,
+    Meter,
     NoOpCounter,
     NoOpHistogram,
+    NoOpMeter,
     NoOpUpDownCounter,
     ObservableCounter,
     ObservableGauge,
@@ -561,3 +562,25 @@ class TestObservableUpDownCounter(TestCase):
             ].default,
             Signature.empty,
         )
+
+    def test_name_regex(self):
+
+        instrument = ChildInstrument("name")
+
+        self.assertTrue(instrument._check_name_and_unit("a" * 63, "unit")[0])
+        self.assertTrue(instrument._check_name_and_unit("a.", "unit")[0])
+        self.assertTrue(instrument._check_name_and_unit("a-", "unit")[0])
+        self.assertTrue(instrument._check_name_and_unit("a_", "unit")[0])
+        self.assertFalse(instrument._check_name_and_unit("a" * 64, "unit")[0])
+        self.assertFalse(instrument._check_name_and_unit("Ñ", "unit")[0])
+        self.assertFalse(instrument._check_name_and_unit("_a", "unit")[0])
+        self.assertFalse(instrument._check_name_and_unit("1a", "unit")[0])
+        self.assertFalse(instrument._check_name_and_unit("", "unit")[0])
+
+    def test_unit_regex(self):
+
+        instrument = ChildInstrument("name")
+
+        self.assertTrue(instrument._check_name_and_unit("name", "a" * 63)[1])
+        self.assertFalse(instrument._check_name_and_unit("name", "a" * 64)[1])
+        self.assertFalse(instrument._check_name_and_unit("name", "Ñ")[1])

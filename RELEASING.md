@@ -79,21 +79,6 @@ git push origin stable
 
 To validate this worked, ensure the stable build has run successfully: https://readthedocs.org/projects/opentelemetry-python/builds/. If the build has not run automatically, it can be manually trigger via the readthedocs interface.
 
-## Hotfix procedure
-
-A `hotfix` is defined as a small change developed to correct a bug that should be released as quickly as possible. Due to the nature of hotfixes, they usually will only affect one or a few packages. Therefore, it usually is not necessary to go through the entire release process outlined above for hotfixes. Follow the below steps how to release a hotfix:
-
-1. Identify the packages that are affected by the bug. Make the changes to those packages, merging to `main`, as quickly as possible.
-2. On your local machine, remove the `dev0` tags from the version number and increment the patch version number.
-3. On your local machine, update `CHANGELOG.md` with the date of the hotfix change.
-4. With administrator priviledges for PyPi, manually publish the affected packages.
-    a. Install [twine](https://pypi.org/project/twine/)
-    b. Navigate to where the `setup.py` file exists for the package you want to publish.
-    c. Run `python setup.py sdist bdist_wheel`. You may have to install [wheel](https://pypi.org/project/wheel/) as well.
-    d. Validate your built distributions by running `twine check dist/*`.
-    e. Upload distibutions to PyPi by running `twine upload dist/*`.
-5. Note that since hotfixes are manually published, the build scripts for publish after creating a release are not run.
-
 ## Troubleshooting
 
 ### Publish failed

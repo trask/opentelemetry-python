@@ -12,19 +12,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# pylint: disable=unused-import
+
 from dataclasses import dataclass
-from typing import Union
+from typing import Sequence
 
-from opentelemetry._metrics import Instrument
-from opentelemetry.util.types import Attributes
+# This kind of import is needed to avoid Sphinx errors.
+import opentelemetry.sdk.metrics
+import opentelemetry.sdk.resources
 
 
-@dataclass(frozen=True)
-class Measurement:
-    """
-    Represents a data point reported via the metrics API to the SDK.
-    """
-
-    value: Union[int, float]
-    instrument: Instrument
-    attributes: Attributes = None
+@dataclass
+class SdkConfiguration:
+    resource: "opentelemetry.sdk.resources.Resource"
+    metric_readers: Sequence["opentelemetry.sdk.metrics.MetricReader"]
+    views: Sequence["opentelemetry.sdk.metrics.View"]

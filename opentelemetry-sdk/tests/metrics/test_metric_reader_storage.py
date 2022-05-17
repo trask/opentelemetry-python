@@ -15,22 +15,25 @@
 from logging import WARNING
 from unittest.mock import MagicMock, Mock, patch
 
-from opentelemetry.sdk._metrics import (
+from opentelemetry.sdk.metrics import (
     Counter,
     Histogram,
     ObservableCounter,
     UpDownCounter,
 )
-from opentelemetry.sdk._metrics._internal.measurement import Measurement
-from opentelemetry.sdk._metrics._internal.metric_reader_storage import (
+from opentelemetry.sdk.metrics._internal.aggregation import (
+    _LastValueAggregation,
+)
+from opentelemetry.sdk.metrics._internal.measurement import Measurement
+from opentelemetry.sdk.metrics._internal.metric_reader_storage import (
     _DEFAULT_VIEW,
     MetricReaderStorage,
 )
-from opentelemetry.sdk._metrics._internal.sdk_configuration import (
+from opentelemetry.sdk.metrics._internal.sdk_configuration import (
     SdkConfiguration,
 )
-from opentelemetry.sdk._metrics.export import AggregationTemporality
-from opentelemetry.sdk._metrics.view import (
+from opentelemetry.sdk.metrics.export import AggregationTemporality
+from opentelemetry.sdk.metrics.view import (
     DefaultAggregation,
     DropAggregation,
     ExplicitBucketHistogramAggregation,
@@ -54,7 +57,7 @@ def mock_instrument() -> Mock:
 
 class TestMetricReaderStorage(ConcurrencyTestBase):
     @patch(
-        "opentelemetry.sdk._metrics._internal"
+        "opentelemetry.sdk.metrics._internal"
         ".metric_reader_storage._ViewInstrumentMatch"
     )
     def test_creates_view_instrument_matches(
@@ -100,15 +103,15 @@ class TestMetricReaderStorage(ConcurrencyTestBase):
         self.assertEqual(len(MockViewInstrumentMatch.call_args_list), 1)
 
     @patch(
-        "opentelemetry.sdk._metrics._internal."
+        "opentelemetry.sdk.metrics._internal."
         "metric_reader_storage._ViewInstrumentMatch"
     )
     def test_forwards_calls_to_view_instrument_match(
         self, MockViewInstrumentMatch: Mock
     ):
-        view_instrument_match1 = Mock()
-        view_instrument_match2 = Mock()
-        view_instrument_match3 = Mock()
+        view_instrument_match1 = Mock(_aggregation=_LastValueAggregation({}))
+        view_instrument_match2 = Mock(_aggregation=_LastValueAggregation({}))
+        view_instrument_match3 = Mock(_aggregation=_LastValueAggregation({}))
         MockViewInstrumentMatch.side_effect = [
             view_instrument_match1,
             view_instrument_match2,
@@ -163,10 +166,63 @@ class TestMetricReaderStorage(ConcurrencyTestBase):
         view_instrument_match1.collect.assert_called_once()
         view_instrument_match2.collect.assert_called_once()
         view_instrument_match3.collect.assert_called_once()
-        self.assertEqual(result, all_metrics)
+        self.assertEqual(
+            (
+                result.resource_metrics[0]
+                .scope_metrics[0]
+                .metrics[0]
+                .data.data_points[0]
+            ),
+            all_metrics[0],
+        )
+        self.assertEqual(
+            (
+                result.resource_metrics[0]
+                .scope_metrics[0]
+                .metrics[0]
+                .data.data_points[1]
+            ),
+            all_metrics[1],
+        )
+        self.assertEqual(
+            (
+                result.resource_metrics[0]
+                .scope_metrics[0]
+                .metrics[1]
+                .data.data_points[0]
+            ),
+            all_metrics[2],
+        )
+        self.assertEqual(
+            (
+                result.resource_metrics[0]
+                .scope_metrics[0]
+                .metrics[1]
+                .data.data_points[1]
+            ),
+            all_metrics[3],
+        )
+        self.assertEqual(
+            (
+                result.resource_metrics[0]
+                .scope_metrics[1]
+                .metrics[0]
+                .data.data_points[0]
+            ),
+            all_metrics[4],
+        )
+        self.assertEqual(
+            (
+                result.resource_metrics[0]
+                .scope_metrics[1]
+                .metrics[0]
+                .data.data_points[1]
+            ),
+            all_metrics[5],
+        )
 
     @patch(
-        "opentelemetry.sdk._metrics._internal."
+        "opentelemetry.sdk.metrics._internal."
         "metric_reader_storage._ViewInstrumentMatch"
     )
     def test_race_concurrent_measurements(self, MockViewInstrumentMatch: Mock):
@@ -199,7 +255,7 @@ class TestMetricReaderStorage(ConcurrencyTestBase):
         self.assertEqual(mock_view_instrument_match_ctor.call_count, 1)
 
     @patch(
-        "opentelemetry.sdk._metrics._internal."
+        "opentelemetry.sdk.metrics._internal."
         "metric_reader_storage._ViewInstrumentMatch"
     )
     def test_default_view_enabled(self, MockViewInstrumentMatch: Mock):
@@ -256,7 +312,56 @@ class TestMetricReaderStorage(ConcurrencyTestBase):
         )
         metric_reader_storage.consume_measurement(Measurement(1, counter))
 
-        self.assertEqual([], metric_reader_storage.collect())
+        self.assertEqual(
+            [],
+            (
+                metric_reader_storage.collect()
+                .resource_metrics[0]
+                .scope_metrics[0]
+                .metrics
+            ),
+        )
+
+    def test_same_collection_start(self):
+
+        counter = Counter("name", Mock(), Mock())
+        up_down_counter = UpDownCounter("name", Mock(), Mock())
+
+        metric_reader_storage = MetricReaderStorage(
+            SdkConfiguration(
+                resource=Mock(),
+                metric_readers=(),
+                views=(View(instrument_name="name"),),
+            ),
+            MagicMock(
+                **{
+                    "__getitem__.return_value": AggregationTemporality.CUMULATIVE
+                }
+            ),
+            MagicMock(**{"__getitem__.return_value": DefaultAggregation()}),
+        )
+
+        metric_reader_storage.consume_measurement(Measurement(1, counter))
+        metric_reader_storage.consume_measurement(
+            Measurement(1, up_down_counter)
+        )
+
+        actual = metric_reader_storage.collect()
+
+        self.assertEqual(
+            list(
+                actual.resource_metrics[0]
+                .scope_metrics[0]
+                .metrics[0]
+                .data.data_points
+            )[0].time_unix_nano,
+            list(
+                actual.resource_metrics[0]
+                .scope_metrics[1]
+                .metrics[0]
+                .data.data_points
+            )[0].time_unix_nano,
+        )
 
     def test_conflicting_view_configuration(self):
 

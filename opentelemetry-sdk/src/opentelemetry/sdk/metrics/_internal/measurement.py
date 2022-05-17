@@ -12,20 +12,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# pylint: disable=unused-import
+from dataclasses import dataclass
+from typing import Union
 
-from opentelemetry.sdk._metrics._internal.aggregation import (  # noqa: F401
-    Aggregation,
-    DefaultAggregation,
-    DropAggregation,
-    ExplicitBucketHistogramAggregation,
-    LastValueAggregation,
-    SumAggregation,
-)
-from opentelemetry.sdk._metrics._internal.view import View  # noqa: F401
+from opentelemetry.metrics import Instrument
+from opentelemetry.util.types import Attributes
 
-__all__ = []
-for key, value in globals().copy().items():
-    if not key.startswith("_"):
-        value.__module__ = __name__
-        __all__.append(key)
+
+@dataclass(frozen=True)
+class Measurement:
+    """
+    Represents a data point reported via the metrics API to the SDK.
+    """
+
+    value: Union[int, float]
+    instrument: Instrument
+    attributes: Attributes = None

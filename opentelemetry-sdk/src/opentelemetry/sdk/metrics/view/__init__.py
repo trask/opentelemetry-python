@@ -14,16 +14,18 @@
 
 # pylint: disable=unused-import
 
-from dataclasses import dataclass
-from typing import Sequence
+from opentelemetry.sdk.metrics._internal.aggregation import (  # noqa: F401
+    Aggregation,
+    DefaultAggregation,
+    DropAggregation,
+    ExplicitBucketHistogramAggregation,
+    LastValueAggregation,
+    SumAggregation,
+)
+from opentelemetry.sdk.metrics._internal.view import View  # noqa: F401
 
-# This kind of import is needed to avoid Sphinx errors.
-import opentelemetry.sdk._metrics
-import opentelemetry.sdk.resources
-
-
-@dataclass
-class SdkConfiguration:
-    resource: "opentelemetry.sdk.resources.Resource"
-    metric_readers: Sequence["opentelemetry.sdk._metrics.MetricReader"]
-    views: Sequence["opentelemetry.sdk._metrics.View"]
+__all__ = []
+for key, value in globals().copy().items():
+    if not key.startswith("_"):
+        value.__module__ = __name__
+        __all__.append(key)

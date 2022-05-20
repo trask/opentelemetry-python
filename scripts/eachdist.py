@@ -546,6 +546,7 @@ def lint_args(args):
         )
     )
 
+
 def find(name, path):
     for root, _, files in os.walk(path):
         if name in files:

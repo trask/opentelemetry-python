@@ -147,7 +147,11 @@ class BatchLogProcessor(LogProcessor):
         self._max_export_batch_size = max_export_batch_size
         self._export_timeout_millis = export_timeout_millis
         self._queue = collections.deque()  # type: Deque[LogData]
-        self._worker_thread = threading.Thread(target=self.worker, daemon=True)
+        self._worker_thread = threading.Thread(
+            name="OtelBatchLogProcessor",
+            target=self.worker,
+            daemon=True,
+        )
         self._condition = threading.Condition(threading.Lock())
         self._shutdown = False
         self._flush_request = None  # type: Optional[_FlushRequest]
@@ -164,7 +168,11 @@ class BatchLogProcessor(LogProcessor):
     def _at_fork_reinit(self):
         self._condition = threading.Condition(threading.Lock())
         self._queue.clear()
-        self._worker_thread = threading.Thread(target=self.worker, daemon=True)
+        self._worker_thread = threading.Thread(
+            name="OtelBatchLogProcessor",
+            target=self.worker,
+            daemon=True,
+        )
         self._worker_thread.start()
 
     def worker(self):
@@ -178,7 +186,7 @@ class BatchLogProcessor(LogProcessor):
                 flush_request = self._get_and_unset_flush_request()
                 if (
                     len(self._queue) < self._max_export_batch_size
-                    and self._flush_request is None
+                    and flush_request is None
                 ):
                     self._condition.wait(timeout)
 

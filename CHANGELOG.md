@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+## Version 1.12.0rc2/0.32b0-dev (2022-06-06)
+
 - Fix type hints for textmap `Getter` and `Setter`
   ([#2657](https://github.com/open-telemetry/opentelemetry-python/pull/2657))
 - Fix LogEmitterProvider.force_flush hanging randomly

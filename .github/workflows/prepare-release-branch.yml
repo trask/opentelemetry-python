@@ -127,7 +127,7 @@ jobs:
         run: |
           # the actual release date on main will be updated at the end of the release workflow
           date=$(date "+%Y-%m-%d")
-          sed -Ei "s/^## Unreleased$/## Unreleased\n\n## Version $VERSION ($date)/" CHANGELOG.md
+          sed -Ei "s/^## Unreleased$/## Unreleased\n\n## Version ${VERSION/\//\\\/} ($date)/" CHANGELOG.md
 
       - name: Set git user
         run: .github/scripts/set-git-user.sh

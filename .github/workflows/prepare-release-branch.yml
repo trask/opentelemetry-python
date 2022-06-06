@@ -51,6 +51,7 @@ jobs:
 
           echo "STABLE_VERSION=$stable_version" >> $GITHUB_ENV
           echo "PRERELEASE_VERSION=$prerelease_version" >> $GITHUB_ENV
+          echo "VERSION=${stable_version}/${prerelease_version}" >> $GITHUB_ENV
           echo "RELEASE_BRANCH_NAME=$release_branch_name" >> $GITHUB_ENV
 
       - name: Update version
@@ -59,7 +60,7 @@ jobs:
       - name: Update the change log with the approximate release date
         run: |
           date=$(date "+%Y-%m-%d")
-          sed -Ei "s/^## Unreleased$/## Version $STABLE_VERSION\/$PRERELEASE_VERSION ($date)/" CHANGELOG.md
+          sed -Ei "s/^## Unreleased$/## Version $VERSION ($date)/" CHANGELOG.md
 
       - name: Set git user
         run: .github/scripts/set-git-user.sh
@@ -69,8 +70,8 @@ jobs:
           # not using secrets.GITHUB_TOKEN since pull requests from that token do not run workflows
           GITHUB_TOKEN: ${{ secrets.BOT_TOKEN }}
         run: |
-          message="Prepare release ${STABLE_VERSION}/${PRERELEASE_VERSION}"
-          branch="prepare-release-${STABLE_VERSION}-${PRERELEASE_VERSION}"
+          message="Prepare release ${VERSION}"
+          branch="prepare-release-${VERSION/\//-}"
 
           git commit -a -m "$message"
           git push origin HEAD:$branch
@@ -112,9 +113,12 @@ jobs:
             exit 1
           fi
 
-          echo "NEXT_STABLE_VERSION=$stable_major.$((stable_minor + 1)).0-dev" >> $GITHUB_ENV
-          echo "NEXT_PRERELEASE_VERSION=0.$((prerelease_minor + 1))b0-dev" >> $GITHUB_ENV
-          echo "NEXT_VERSION=${NEXT_STABLE_VERSION}/${NEXT_PRERELEASE_VERSION}" >> $GITHUB_ENV
+          next_stable_version="$stable_major.$((stable_minor + 1)).0-dev"
+          next_prerelease_version="0.$((prerelease_minor + 1))b0-dev"
+
+          echo "NEXT_STABLE_VERSION=$next_stable_version" >> $GITHUB_ENV
+          echo "NEXT_PRERELEASE_VERSION=$next_prerelease_version" >> $GITHUB_ENV
+          echo "NEXT_VERSION=${$next_stable_version}/${next_prerelease_version}" >> $GITHUB_ENV
 
       - name: Update version
         run: .github/scripts/update-version.sh $NEXT_STABLE_VERSION $NEXT_PRERELEASE_VERSION

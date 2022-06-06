@@ -36,16 +36,15 @@ jobs:
 
           if [[ $stable_version =~ ^([0-9]+)\.([0-9]+)\.0$ ]]; then
             stable_version_branch_part=$(echo $stable_version | sed -E 's/([0-9]+)\.([0-9]+)\.0/\1.\2.x/')
+            prerelease_version_branch_part=$(echo $prerelease_version | sed -E 's/0\.([0-9]+)b0/0.\1bx/')
+            release_branch_name="release/v${stable_version_branch_part}-${prerelease_version_branch_part}"
           elif [[ $stable_version =~ ^([0-9]+)\.([0-9]+)\.0 ]]; then
             # pre-release version, e.g. 1.9.0rc
-            stable_version_branch_part="release/v$stable_version"
+            release_branch_name="release/v$stable_version-$prerelease_version"
           else
-            echo "unexpected version: $version"
+            echo "unexpected version: $stable_version"
             exit 1
           fi
-
-          prerelease_version_branch_part=$(echo $prerelease_version | sed -E 's/0\.([0-9]+)b0/0.\1bx/')
-          release_branch_name="release/v${stable_version_branch_part}-${prerelease_version_branch_part}"
 
           git push origin HEAD:$release_branch_name
 
@@ -118,7 +117,7 @@ jobs:
 
           echo "NEXT_STABLE_VERSION=$next_stable_version" >> $GITHUB_ENV
           echo "NEXT_PRERELEASE_VERSION=$next_prerelease_version" >> $GITHUB_ENV
-          echo "NEXT_VERSION=${$next_stable_version}/${next_prerelease_version}" >> $GITHUB_ENV
+          echo "NEXT_VERSION=${next_stable_version}/${next_prerelease_version}" >> $GITHUB_ENV
 
       - name: Update version
         run: .github/scripts/update-version.sh $NEXT_STABLE_VERSION $NEXT_PRERELEASE_VERSION

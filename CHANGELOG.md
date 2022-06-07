@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
-## Version 1.12.1\/0.33b1 (2022-06-07)
+## Version 1.12.1/0.33b1 (2022-06-07)
 
 - Example AA
   ([#2649](https://github.com/open-telemetry/opentelemetry-python/pull/2649))

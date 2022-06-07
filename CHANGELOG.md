@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+- Example A
+  ([#2649](https://github.com/open-telemetry/opentelemetry-python/pull/2649))
+- Example B
+  ([#2649](https://github.com/open-telemetry/opentelemetry-python/pull/2649))
+
 ## Version 1.12.0rc2/0.32b0 (2022-06-06)
 
 - Fix type hints for textmap `Getter` and `Setter`

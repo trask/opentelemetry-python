@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+- Add min/max fields to Histogram
+  ([#2759](https://github.com/open-telemetry/opentelemetry-python/pull/2759))
 - `opentelemetry-exporter-otlp-proto-http` Add support for OTLP/HTTP log exporter
   ([#2462](https://github.com/open-telemetry/opentelemetry-python/pull/2462))
 - Fix yield of `None`-valued points
@@ -25,6 +27,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#2726](https://github.com/open-telemetry/opentelemetry-python/pull/2726))
 - fix: frozenset object has no attribute items
   ([#2727](https://github.com/open-telemetry/opentelemetry-python/pull/2727))
+- fix: create suppress HTTP instrumentation key in opentelemetry context 
+  ([#2729](https://github.com/open-telemetry/opentelemetry-python/pull/2729))
 - Support logs SDK auto instrumentation enable/disable with env
   ([#2728](https://github.com/open-telemetry/opentelemetry-python/pull/2728))
 - fix: update entry point object references for metrics
@@ -35,6 +39,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#2705](https://github.com/open-telemetry/opentelemetry-python/pull/2705))
 - Add entrypoint for metrics exporter
   ([#2748](https://github.com/open-telemetry/opentelemetry-python/pull/2748))
+- Fix Jaeger propagator usage with NonRecordingSpan
+  ([#2762](https://github.com/open-telemetry/opentelemetry-python/pull/2762))
+
 
 ## Version 1.12.0rc1/0.31b0 (2022-05-17)
 

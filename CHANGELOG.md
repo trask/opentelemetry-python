@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+- Fix
+  ([#105](https://github.com/open-telemetry/opentelemetry-python/pull/105))
+
 ## Version 1.14.0/0.35b0 (2022-10-24)
 
 - Update explicit histogram bucket boundaries

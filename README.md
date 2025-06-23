@@ -116,7 +116,7 @@ For more information about the maintainer role, see the [community repository](h
 
 For more information about the approver role, see the [community repository](https://github.com/open-telemetry/community/blob/main/community-membership.md#approver).
 
-### Emeritus Maintainers:
+### Emeritus Maintainers
 
 - [Alex Boten](https://github.com/codeboten), Lightstep
 - [Chris Kleinknecht](https://github.com/c24t), Google

@@ -2,9 +2,14 @@ name: Release
 on:
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
   release:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write  # needed for creating releases
     steps:
       - run: |
           if [[ $GITHUB_REF_NAME != release/* ]]; then

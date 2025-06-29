@@ -2,6 +2,9 @@ name: Prepare patch release
 on:
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
   prepare-patch-release:
     runs-on: ubuntu-latest
